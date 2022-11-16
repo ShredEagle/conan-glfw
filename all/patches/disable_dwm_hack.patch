@@ -1,0 +1,56 @@
+diff --git a/README.md b/README.md
+index 4abb16c7..1666cc3f 100644
+--- a/README.md
++++ b/README.md
+@@ -191,6 +191,7 @@ information on what to include when reporting a bug.
+    wlroots compositors (#1268)
+  - [Wayland] Bugfix: `GLFW_DECORATED` was ignored when showing a window with XDG
+    decorations
++ - [WGL] Disabled the DWM swap interval hack for Windows 8 and later (#1072)
+ 
+ 
+ ## Contact
+diff --git a/src/wgl_context.c b/src/wgl_context.c
+index 72ad11de..e2dbbe1f 100644
+--- a/src/wgl_context.c
++++ b/src/wgl_context.c
+@@ -323,14 +323,12 @@ static void swapBuffersWGL(_GLFWwindow* window)
+ {
+     if (!window->monitor)
+     {
+-        if (IsWindowsVistaOrGreater())
++        // HACK: Use DwmFlush when desktop composition is enabled on Windows Vista and 7
++        if (!IsWindows8OrGreater() && IsWindowsVistaOrGreater())
+         {
+-            // DWM Composition is always enabled on Win8+
+-            BOOL enabled = IsWindows8OrGreater();
++            BOOL enabled = FALSE;
+ 
+-            // HACK: Use DwmFlush when desktop composition is enabled
+-            if (enabled ||
+-                (SUCCEEDED(DwmIsCompositionEnabled(&enabled)) && enabled))
++            if (SUCCEEDED(DwmIsCompositionEnabled(&enabled)) && enabled)
+             {
+                 int count = abs(window->context.wgl.interval);
+                 while (count--)
+@@ -350,15 +348,13 @@ static void swapIntervalWGL(int interval)
+ 
+     if (!window->monitor)
+     {
+-        if (IsWindowsVistaOrGreater())
++        // HACK: Disable WGL swap interval when desktop composition is enabled on Windows
++        //       Vista and 7 to avoid interfering with DWM vsync
++        if (!IsWindows8OrGreater() && IsWindowsVistaOrGreater())
+         {
+-            // DWM Composition is always enabled on Win8+
+-            BOOL enabled = IsWindows8OrGreater();
++            BOOL enabled = FALSE;
+ 
+-            // HACK: Disable WGL swap interval when desktop composition is enabled to
+-            //       avoid interfering with DWM vsync
+-            if (enabled ||
+-                (SUCCEEDED(DwmIsCompositionEnabled(&enabled)) && enabled))
++            if (SUCCEEDED(DwmIsCompositionEnabled(&enabled)) && enabled)
+                 interval = 0;
+         }
+     }

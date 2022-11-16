@@ -1,0 +1,8 @@
+sources:
+  "3.3.8":
+    url: "https://github.com/glfw/glfw/archive/refs/tags/3.3.8.tar.gz"
+    sha256: "f30f42e05f11e5fc62483e513b0488d5bceeab7d9c5da0ffe2252ad81816c713"
+patches:
+  "3.3.8":
+    - patch_file: "patches/2208-install_pdb.patch"
+    - patch_file: "patches/disable_dwm_hack.patch"
